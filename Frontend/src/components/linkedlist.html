@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked List Visualization with Three.js</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        input {
+            margin: 5px;
+            padding: 8px;
+            width: 50px;
+        }
+        #info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3>Linked List Controls</h3>
+        <div>
+            <button id="addNode">Add Node</button>
+            <input type="number" id="nodeValue" placeholder="Value" value="0">
+        </div>
+        <div>
+            <button id="deleteNode">Delete Node</button>
+            <input type="number" id="deleteIndex" placeholder="Index" value="0">
+        </div>
+        <div>
+            <button id="insertNode">Insert Node</button>
+            <input type="number" id="insertValue" placeholder="Value" value="0">
+            <input type="number" id="insertIndex" placeholder="Index" value="0">
+        </div>
+        <div>
+            <button id="reset">Reset List</button>
+        </div>
+    </div>
+    <div id="info">
+        <h3>Current Linked List</h3>
+        <div id="listInfo">Empty</div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.161.0/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+        import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+
+        // Linked List Node class
+        class Node {
+            constructor(value) {
+                this.value = value;
+                this.next = null;
+                this.mesh = null;
+                this.textMesh = null;
+                this.arrowMesh = null;
+            }
+        }
+
+        // Linked List class
+        class LinkedList {
+            constructor() {
+                this.head = null;
+                this.size = 0;
+            }
+
+            // Add a node to the end of the list
+            append(value) {
+                const newNode = new Node(value);
+                this.size++;
+
+                if (!this.head) {
+                    this.head = newNode;
+                    return;
+                }
+
+                let current = this.head;
+                while (current.next) {
+                    current = current.next;
+                }
+                current.next = newNode;
+            }
+
+            // Insert a node at a specific position
+            insertAt(value, index) {
+                if (index < 0 || index > this.size) {
+                    console.error("Invalid index");
+                    return false;
+                }
+
+                const newNode = new Node(value);
+
+                if (index === 0) {
+                    newNode.next = this.head;
+                    this.head = newNode;
+                } else {
+                    let current = this.head;
+                    let count = 0;
+                    let previous;
+
+                    while (count < index) {
+                        previous = current;
+                        current = current.next;
+                        count++;
+                    }
+
+                    newNode.next = current;
+                    previous.next = newNode;
+                }
+
+                this.size++;
+                return true;
+            }
+
+            // Remove a node at a specific position
+            removeAt(index) {
+                if (index < 0 || index >= this.size) {
+                    console.error("Invalid index");
+                    return false;
+                }
+
+                let current = this.head;
+
+                if (index === 0) {
+                    this.head = current.next;
+                } else {
+                    let previous;
+                    let count = 0;
+
+                    while (count < index) {
+                        count++;
+                        previous = current;
+                        current = current.next;
+                    }
+
+                    previous.next = current.next;
+                }
+
+                this.size--;
+                return current.value;
+            }
+
+            // Get the list as a string
+            toString() {
+                let current = this.head;
+                let str = "";
+
+                while (current) {
+                    str += current.value + (current.next ? " -> " : "");
+                    current = current.next;
+                }
+
+                return str || "Empty";
+            }
+        }
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x282c34);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 15;
+        camera.position.y = 5;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Orbit controls for camera
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
+
+        // Grid helper
+        const gridHelper = new THREE.GridHelper(20, 20);
+        scene.add(gridHelper);
+
+        // Font loader
+        const fontLoader = new FontLoader();
+        let font;
+
+        // Load font
+        fontLoader.load('https://cdn.jsdelivr.net/npm/three@0.161.0/examples/fonts/helvetiker_regular.typeface.json', loadedFont => {
+            font = loadedFont;
+        });
+
+        // Linked list and visualization
+        const linkedList = new LinkedList();
+        const nodeObjects = [];
+
+        // Materials
+        const nodeMaterial = new THREE.MeshLambertMaterial({ color: 0x4287f5 });
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const arrowMaterial = new THREE.MeshBasicMaterial({ color: 0xff9500 });
+
+        // Function to create node text
+        function createTextMesh(text, position) {
+            if (!font) return null;
+
+            const textGeometry = new TextGeometry(text.toString(), {
+                font: font,
+                size: 0.5,
+                height: 0.1
+            });
+
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.copy(position);
+            textMesh.position.y += 0.6;
+            textMesh.position.x -= 0.3;
+            scene.add(textMesh);
+            return textMesh;
+        }
+
+        // Function to create arrow
+        function createArrow(startPos, endPos) {
+            const direction = new THREE.Vector3().subVectors(endPos, startPos);
+            const length = direction.length() - 2; // Adjust for node size
+            
+            const arrowHelper = new THREE.ArrowHelper(
+                direction.normalize(),
+                startPos,
+                length,
+                0xff9500,
+                0.5,
+                0.3
+            );
+            
+            scene.add(arrowHelper);
+            return arrowHelper;
+        }
+
+        // Function to update visual representation
+        function updateVisual() {
+            // Clear previous visualization
+            while (nodeObjects.length > 0) {
+                const obj = nodeObjects.pop();
+                scene.remove(obj.nodeMesh);
+                scene.remove(obj.textMesh);
+                if (obj.arrowMesh) scene.remove(obj.arrowMesh);
+            }
+
+            let current = linkedList.head;
+            let index = 0;
+            const spacing = 3;
+            
+            while (current) {
+                // Create node (cube)
+                const nodeGeometry = new THREE.BoxGeometry(2, 1, 1);
+                const nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
+                nodeMesh.position.x = index * spacing - (linkedList.size - 1) * spacing / 2;
+                scene.add(nodeMesh);
+                
+                // Create text for node value
+                const textMesh = createTextMesh(current.value, nodeMesh.position);
+                
+                // Create arrow if not the last node
+                let arrowMesh = null;
+                if (current.next) {
+                    const startPos = new THREE.Vector3(
+                        nodeMesh.position.x + 1.2,
+                        nodeMesh.position.y,
+                        nodeMesh.position.z
+                    );
+                    const endPos = new THREE.Vector3(
+                        nodeMesh.position.x + spacing,
+                        nodeMesh.position.y,
+                        nodeMesh.position.z
+                    );
+                    arrowMesh = createArrow(startPos, endPos);
+                }
+                
+                // Store references
+                nodeObjects.push({
+                    nodeMesh,
+                    textMesh,
+                    arrowMesh
+                });
+                
+                current = current.next;
+                index++;
+            }
+            
+            // Update info panel
+            document.getElementById('listInfo').textContent = linkedList.toString();
+        }
+
+        // Event listeners
+        document.getElementById('addNode').addEventListener('click', () => {
+            const value = parseInt(document.getElementById('nodeValue').value);
+            linkedList.append(value);
+            updateVisual();
+        });
+
+        document.getElementById('deleteNode').addEventListener('click', () => {
+            const index = parseInt(document.getElementById('deleteIndex').value);
+            linkedList.removeAt(index);
+            updateVisual();
+        });
+
+        document.getElementById('insertNode').addEventListener('click', () => {
+            const value = parseInt(document.getElementById('insertValue').value);
+            const index = parseInt(document.getElementById('insertIndex').value);
+            linkedList.insertAt(value, index);
+            updateVisual();
+        });
+
+        document.getElementById('reset').addEventListener('click', () => {
+            while (linkedList.size > 0) {
+                linkedList.removeAt(0);
+            }
+            updateVisual();
+        });
+
+        // Initialize with some nodes
+        linkedList.append(10);
+        linkedList.append(20);
+        linkedList.append(30);
+        updateVisual();
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

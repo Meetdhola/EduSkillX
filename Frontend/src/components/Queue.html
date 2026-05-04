@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Visualization with Three.js</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+        input {
+            margin: 5px;
+            padding: 8px;
+            width: 50px;
+        }
+        #info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3>Queue Controls</h3>
+        <div>
+            <button id="enqueue">Enqueue</button>
+            <input type="number" id="enqueueValue" placeholder="Value" value="0">
+        </div>
+        <div>
+            <button id="dequeue">Dequeue</button>
+        </div>
+        <div>
+            <button id="peek">Peek</button>
+        </div>
+        <div>
+            <button id="reset">Clear Queue</button>
+        </div>
+    </div>
+    <div id="info">
+        <h3>Queue Information</h3>
+        <div id="queueInfo">Empty Queue</div>
+        <div id="operationInfo"></div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.161.0/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+        import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+
+        // Queue class
+        class Queue {
+            constructor() {
+                this.items = [];
+                this.front = 0;
+                this.rear = -1;
+            }
+
+            // Add element to the queue
+            enqueue(element) {
+                this.rear++;
+                this.items[this.rear] = element;
+                return this.items.length;
+            }
+
+            // Remove element from the queue
+            dequeue() {
+                if (this.isEmpty()) {
+                    return "Queue is empty";
+                }
+                const item = this.items[this.front];
+                this.items[this.front] = null; // Mark as empty
+                this.front++;
+                // Reset when queue becomes empty
+                if (this.front > this.rear) {
+                    this.front = 0;
+                    this.rear = -1;
+                    this.items = [];
+                }
+                return item;
+            }
+
+            // Get the front element without removing it
+            peek() {
+                if (this.isEmpty()) {
+                    return "Queue is empty";
+                }
+                return this.items[this.front];
+            }
+
+            // Check if queue is empty
+            isEmpty() {
+                return this.front > this.rear;
+            }
+
+            // Get queue size
+            size() {
+                return this.isEmpty() ? 0 : this.rear - this.front + 1;
+            }
+
+            // Clear the queue
+            clear() {
+                this.items = [];
+                this.front = 0;
+                this.rear = -1;
+            }
+
+            // Return queue as string
+            toString() {
+                if (this.isEmpty()) {
+                    return "Empty Queue";
+                }
+                return this.items.slice(this.front, this.rear + 1).join(", ");
+            }
+        }
+
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 15;
+        camera.position.y = 5;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Orbit controls for camera
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
+
+        // Add a platform for the queue
+        const platformGeometry = new THREE.BoxGeometry(8, 0.5, 3);
+        const platformMaterial = new THREE.MeshLambertMaterial({ color: 0x555555 });
+        const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+        platform.position.y = -1;
+        scene.add(platform);
+
+        // Grid helper
+        const gridHelper = new THREE.GridHelper(20, 20);
+        scene.add(gridHelper);
+
+        // Font loader
+        const fontLoader = new FontLoader();
+        let font;
+
+        // Load font
+        fontLoader.load('https://cdn.jsdelivr.net/npm/three@0.161.0/examples/fonts/helvetiker_regular.typeface.json', loadedFont => {
+            font = loadedFont;
+            updateVisual(); // Initialize visual once font is loaded
+        });
+
+        // Queue and visualization
+        const queue = new Queue();
+        const queueObjects = [];
+        const maxQueueSize = 8; // Maximum number of elements to show
+
+        // Materials with different colors for queue elements
+        const getElementMaterial = (index) => {
+            // Create a color gradient from green (front) to purple (rear)
+            const hue = 0.3 + (index / maxQueueSize) * 0.5; // 0.3 = green, 0.8 = purple
+            return new THREE.MeshLambertMaterial({ color: new THREE.Color().setHSL(hue, 0.8, 0.5) });
+        };
+        
+        const textMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const highlightMaterial = new THREE.MeshLambertMaterial({ color: 0xffff00 });
+
+        // Function to create element text
+        function createTextMesh(text, position) {
+            if (!font) return null;
+
+            const textGeometry = new TextGeometry(text.toString(), {
+                font: font,
+                size: 0.5,
+                height: 0.1
+            });
+
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.copy(position);
+            textMesh.position.z += 0.6; // Position text in front of the element
+            textMesh.position.x -= 0.3; // Center text
+            scene.add(textMesh);
+            return textMesh;
+        }
+
+        // Function to create a queue element
+        function createQueueElement(value, index) {
+            const elementGeometry = new THREE.BoxGeometry(2, 1, 2);
+            const elementMaterial = getElementMaterial(index);
+            const elementMesh = new THREE.Mesh(elementGeometry, elementMaterial);
+            
+            // Position elements from left (front) to right (rear)
+            elementMesh.position.x = index * 2.5 - (maxQueueSize - 1) * 1.25;
+            
+            scene.add(elementMesh);
+            
+            // Create text for element value
+            const textMesh = createTextMesh(value, elementMesh.position);
+            
+            return { 
+                elementMesh, 
+                textMesh, 
+                value 
+            };
+        }
+
+        // Animation variables
+        let animating = false;
+        let animationTime = 0;
+        const animationDuration = 1.0; // seconds
+        let animationTargetX = 0;
+        let elementToAnimate = null;
+        let operation = ""; // "enqueue", "dequeue", or "peek"
+
+        // Function to update visual representation
+        function updateVisual(animateNewElement = false) {
+            // Clear previous visualization
+            while (queueObjects.length > 0) {
+                const obj = queueObjects.pop();
+                scene.remove(obj.elementMesh);
+                if (obj.textMesh) scene.remove(obj.textMesh);
+            }
+
+            // Create new elements
+            for (let i = queue.front, visIndex = 0; i <= queue.rear; i++, visIndex++) {
+                const element = createQueueElement(queue.items[i], visIndex);
+                queueObjects.push(element);
+            }
+            
+            // Set up animation for new element if needed
+            if (animateNewElement && queueObjects.length > 0) {
+                const lastElement = queueObjects[queueObjects.length - 1];
+                
+                if (operation === "enqueue") {
+                    // Start animation from right
+                    lastElement.elementMesh.position.x = 20;
+                    if (lastElement.textMesh) {
+                        lastElement.textMesh.position.x = 20;
+                    }
+                    
+                    elementToAnimate = lastElement;
+                    animationTargetX = (queue.size() - 1) * 2.5 - (maxQueueSize - 1) * 1.25;
+                    animating = true;
+                    animationTime = 0;
+                }
+            }
+            
+            if (operation === "peek" && queue.size() > 0) {
+                // Highlight front element
+                const frontElement = queueObjects[0];
+                frontElement.elementMesh.material = highlightMaterial;
+                
+                // Reset after 1 second
+                setTimeout(() => {
+                    if (queueObjects.length > 0) {
+                        frontElement.elementMesh.material = getElementMaterial(0);
+                    }
+                }, 1000);
+            }
+            
+            if (operation === "dequeue" && queueObjects.length > 0) {
+                // Animate front element moving left
+                const frontElement = queueObjects[0];
+                elementToAnimate = frontElement;
+                animationTargetX = -20; // Move left out of view
+                animating = true;
+                animationTime = 0;
+            }
+            
+            // Update info panel
+            document.getElementById('queueInfo').textContent = queue.toString();
+            document.getElementById('operationInfo').textContent = 
+                operation === "enqueue" ? "Enqueued: " + queue.peek() :
+                operation === "dequeue" ? "Dequeued: " + (elementToAnimate ? elementToAnimate.value : "") :
+                operation === "peek" ? "Front element: " + queue.peek() : "";
+        }
+
+        // Event listeners
+        document.getElementById('enqueue').addEventListener('click', () => {
+            const value = parseInt(document.getElementById('enqueueValue').value);
+            if (queue.size() < maxQueueSize) {
+                queue.enqueue(value);
+                operation = "enqueue";
+                updateVisual(true);
+            } else {
+                document.getElementById('operationInfo').textContent = "Queue is full! Cannot enqueue more elements.";
+            }
+        });
+
+        document.getElementById('dequeue').addEventListener('click', () => {
+            if (!queue.isEmpty()) {
+                operation = "dequeue";
+                updateVisual();
+                
+                // Schedule actual removal after animation
+                setTimeout(() => {
+                    queue.dequeue();
+                    updateVisual();
+                }, animationDuration * 1000);
+            } else {
+                document.getElementById('operationInfo').textContent = "Cannot dequeue from empty queue!";
+            }
+        });
+
+        document.getElementById('peek').addEventListener('click', () => {
+            operation = "peek";
+            updateVisual();
+        });
+
+        document.getElementById('reset').addEventListener('click', () => {
+            queue.clear();
+            operation = "clear";
+            updateVisual();
+        });
+
+        // Initialize with some elements
+        queue.enqueue(10);
+        queue.enqueue(20);
+        queue.enqueue(30);
+        operation = "initialize";
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Handle animations
+            if (animating && elementToAnimate) {
+                animationTime += 0.016; // Approximate delta time
+                
+                if (animationTime < animationDuration) {
+                    const progress = animationTime / animationDuration;
+                    const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+                    
+                    const currentX = elementToAnimate.elementMesh.position.x;
+                    const newX = currentX + (animationTargetX - currentX) * easedProgress;
+                    
+                    elementToAnimate.elementMesh.position.x = newX;
+                    if (elementToAnimate.textMesh) {
+                        elementToAnimate.textMesh.position.x = newX;
+                    }
+                } else {
+                    // Animation complete
+                    elementToAnimate.elementMesh.position.x = animationTargetX;
+                    if (elementToAnimate.textMesh) {
+                        elementToAnimate.textMesh.position.x = animationTargetX;
+                    }
+                    animating = false;
+                }
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

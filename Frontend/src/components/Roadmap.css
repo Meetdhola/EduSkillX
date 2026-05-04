@@ -1,0 +1,475 @@
+/* EduSkillX.css */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f7;
+  }
+  
+  .eduskillx-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  
+  /* Header Styles */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #5652e5;
+  }
+  
+  .nav-menu {
+    display: flex;
+  }
+  
+  .nav-link {
+    margin: 0 1rem;
+    text-decoration: none;
+    color: #555;
+  }
+  
+  .nav-link:hover {
+    color: #5652e5;
+  }
+  
+  .user-controls {
+    display: flex;
+    align-items: center;
+  }
+  
+  .user-avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 1rem;
+  }
+  
+  .user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  /* Main Content Styles */
+  .main-content {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  
+  .hero-section {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .page-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #1a1a2e;
+  }
+  
+  .page-subtitle {
+    font-size: 1.1rem;
+    color: #666;
+  }
+  
+  /* Generator Card Styles */
+  .roadmap-generator {
+    margin-bottom: 3rem;
+  }
+  
+  .generator-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  .select-wrapper {
+    position: relative;
+  }
+  
+  .skill-select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1rem;
+    font-size: 1rem;
+  }
+  
+  .duration-options {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  
+  .duration-btn {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+  }
+  
+  .duration-btn.active {
+    background-color: #eaecff;
+    border-color: #5652e5;
+    color: #5652e5;
+  }
+  
+  .duration-btn:hover:not(.active) {
+    background-color: #f5f5f7;
+  }
+  
+  .generate-btn {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    background-color: #5652e5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .generate-btn:hover {
+    background-color: #4a46c2;
+  }
+  
+  .arrow-icon {
+    margin-left: 0.5rem;
+  }
+  
+  /* Roadmap Section Styles */
+  .roadmap-section {
+    margin-bottom: 3rem;
+  }
+  
+  .roadmap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .roadmap-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+  }
+  
+  .roadmap-actions {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .action-btn {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: white;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  
+  .action-btn:hover {
+    background-color: #f5f5f7;
+  }
+  
+  .icon {
+    margin-right: 0.5rem;
+  }
+  
+  .roadmap-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .roadmap-week {
+    display: flex;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+  }
+  
+  .week-number {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 3rem;
+    background-color: #5652e5;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+  
+  .week-content {
+    flex: 1;
+    padding: 1.5rem;
+  }
+  
+  .week-title {
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  
+  .tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  
+  .task {
+    display: flex;
+    align-items: center;
+  }
+  
+  .task input[type="checkbox"] {
+    margin-right: 0.8rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  
+  /* Resources Section Styles */
+  .resources-section {
+    margin-bottom: 3rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+  }
+  
+  .resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .resource-card {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+  
+  .resource-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    margin-right: 1rem;
+    font-size: 1.5rem;
+  }
+  
+  .video-icon {
+    background-color: #f0f0ff;
+    color: #5652e5;
+  }
+  
+  .book-icon {
+    background-color: #e6f7ff;
+    color: #0078d4;
+  }
+  
+  .resource-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+  
+  .resource-meta {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  /* Feedback Section Styles */
+  .feedback-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 3rem;
+  }
+  
+  .feedback-btn {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1.5rem;
+    border: 1px solid #5652e5;
+    border-radius: 25px;
+    background-color: white;
+    color: #5652e5;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .feedback-btn:hover {
+    background-color: #f0f0ff;
+  }
+  
+  .refresh-icon {
+    margin-right: 0.5rem;
+  }
+  
+  /* Footer Styles */
+  .footer {
+    background-color: #1a1a2e;
+    color: white;
+    padding: 3rem 2rem;
+  }
+  
+  .footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .footer-brand {
+    flex: 0 0 100%;
+    margin-bottom: 2rem;
+  }
+  
+  @media (min-width: 768px) {
+    .footer-brand {
+      flex: 0 0 30%;
+      margin-bottom: 0;
+    }
+  }
+  
+  .footer-logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+  }
+  
+  .footer-tagline {
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+  
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+  }
+  
+  .footer-heading {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .footer-menu {
+    list-style: none;
+  }
+  
+  .footer-menu li {
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer-menu a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .footer-menu a:hover {
+    color: white;
+  }
+  
+  .social-links {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .social-link {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+  }
+  
+  .social-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .roadmap-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    
+    .roadmap-actions {
+      width: 100%;
+    }
+    
+    .action-btn {
+      flex: 1;
+      justify-content: center;
+    }
+    
+    .footer-content {
+      flex-direction: column;
+      gap: 2rem;
+    }
+  }
